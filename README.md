@@ -22,7 +22,7 @@ Install Miniconda [here](https://repo.anaconda.com/miniconda/Miniconda3-latest-L
     pip install requests matplotlib
 ```
 
-Press `Ctrl + Shift + P` and search `Python: Select Interpreter`, and find the python binary that was created for the svf_ex conda environment. If you do not see it, close and reopen the terminal or restart VSCode.
+If using VSCode, setting up debugging can be set up by pressing `Ctrl + Shift + P` and searching `Python: Select Interpreter`, and find the python binary that was created for the svf_ex conda environment. If you do not see it, close and reopen the terminal or restart VSCode.
 
 ![](images/1.png)
 

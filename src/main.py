@@ -1,13 +1,13 @@
 
 import dgl
-from dgl.data import MiniGCDataset
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-
+from torch.utils.data import DataLoader
 from model import Model
+from svfg_loader import SVFGDataset
+
 
 def collate(samples):
     graphs, labels = map(list, zip(*samples))
@@ -44,20 +44,40 @@ def evaluate(testset, model):
     print('Accuracy of predictions on the test set: {:.2f}%'.format(accuracy_percent))
 
 def main():
-    # Create training and test sets.
-    trainset = MiniGCDataset(320, 10, 20)
-    testset = MiniGCDataset(80, 10, 20)
-    data_loader = DataLoader(trainset, batch_size=32, shuffle=True,
-                            collate_fn=collate)
+    # Parameters
+    num_epochs = 200
+    learning_rate = 0.001
+    dataset_batch_size = 32
+    model_input_dimensions = 1
+    model_output_dimensions = 256
+
+    # Load training and test sets.
+    train_edges_path = 'data/train_graph_edges.csv'
+    train_properties_path = 'data/train_graph_properties.csv'
+    train_dataset = SVFGDataset(train_edges_path, train_properties_path)
+
+    test_edges_path = 'data/test_graph_edges.csv'
+    test_properties_path = 'data/test_graph_properties.csv'
+    test_dataset = SVFGDataset(test_edges_path, test_properties_path)
+
+    data_loader = DataLoader(train_dataset, batch_size=dataset_batch_size,
+                             shuffle=True, collate_fn=collate)
+
+    # # Display each graph
+    # for iter, (bg, label) in enumerate(data_loader):
+    #     fig, ax = plt.subplots()
+    #     nx.draw(bg.to_networkx(), ax=ax)
+    #     plt.show()
 
     # Create model
-    model = Model(1, 256, trainset.num_classes)
+    model = Model(model_input_dimensions, model_output_dimensions,
+                  train_dataset.num_classes)
     loss_func = nn.CrossEntropyLoss()
-    optimiser = optim.Adam(model.parameters(), lr=0.001)
-    num_epochs = 200
+    optimiser = optim.Adam(model.parameters(), lr=learning_rate)
+    
     epoch_losses = train(model, data_loader, loss_func, optimiser, num_epochs)
 
-    evaluate(testset, model)
+    evaluate(test_dataset, model)
 
     # Plot losses
     plt.title('Cross Entropy Loss Over Minibatches')

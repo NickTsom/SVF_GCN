@@ -63,12 +63,6 @@ def main():
     data_loader = DataLoader(train_dataset, batch_size=dataset_batch_size,
                              shuffle=True, collate_fn=collate)
 
-    # # Display each graph
-    # for iter, (bg, label) in enumerate(data_loader):
-    #     fig, ax = plt.subplots()
-    #     nx.draw(bg.to_networkx(), ax=ax)
-    #     plt.show()
-
     # Create model
     model = Model(model_input_dimensions, model_output_dimensions,
                   train_dataset.num_classes)

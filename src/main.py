@@ -1,12 +1,15 @@
 
 import dgl
+from dgl.data.minigc import MiniGCDataset
 import torch
 import torch.optim as optim
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
-from model import Model
+from classifier import Classifier
 from svfg_loader import SVFGDataset
+
+from dgl.data.utils import split_dataset
 
 
 def collate(samples):
@@ -19,7 +22,8 @@ def train(model, data_loader, loss_func, optimiser, num_epochs):
     for epoch in range(num_epochs):
         epoch_loss = 0
         for iter, (bg, label) in enumerate(data_loader):
-            prediction = model.forward(bg)
+            prediction = model(bg)
+            #label = label[:, None]
             loss = loss_func(prediction, label)
             optimiser.zero_grad()
             loss.backward()
@@ -36,12 +40,13 @@ def evaluate(testset, model):
     test_X, test_Y = map(list, zip(*testset))
     test_bg = dgl.batch(test_X)
     test_Y = torch.tensor(test_Y).float().view(-1, 1)
-    probs_Y = torch.softmax(model.forward(test_bg), 1)
+    probs_Y = torch.softmax(model(test_bg), 1)
     argmax_Y = torch.max(probs_Y, 1)[1].view(-1, 1).float()
     correct_predictions = (test_Y == argmax_Y).sum().item()
     accuracy_percent = correct_predictions / len(test_Y) * 100
 
     print('Accuracy of predictions on the test set: {:.2f}%'.format(accuracy_percent))
+
 
 def main():
     # Parameters
@@ -50,27 +55,24 @@ def main():
     dataset_batch_size = 32
     model_input_dimensions = 1
     model_output_dimensions = 256
+    dropout = 0.2
 
-    # Load training and test sets.
-    train_edges_path = 'data/train_graph_edges.csv'
-    train_properties_path = 'data/train_graph_properties.csv'
-    train_dataset = SVFGDataset(train_edges_path, train_properties_path)
-
-    test_edges_path = 'data/test_graph_edges.csv'
-    test_properties_path = 'data/test_graph_properties.csv'
-    test_dataset = SVFGDataset(test_edges_path, test_properties_path)
+    train_dataset = MiniGCDataset(320, 10, 20)
+    test_dataset = MiniGCDataset(80, 10, 20)
 
     data_loader = DataLoader(train_dataset, batch_size=dataset_batch_size,
                              shuffle=True, collate_fn=collate)
 
     # Create model
-    model = Model(model_input_dimensions, model_output_dimensions,
-                  train_dataset.num_classes)
+    model = Classifier(model_input_dimensions, model_output_dimensions,
+                       train_dataset.num_classes, dropout)
     loss_func = nn.CrossEntropyLoss()
     optimiser = optim.Adam(model.parameters(), lr=learning_rate)
-    
+
+    model.train()
     epoch_losses = train(model, data_loader, loss_func, optimiser, num_epochs)
 
+    model.eval()
     evaluate(test_dataset, model)
 
     # Plot losses

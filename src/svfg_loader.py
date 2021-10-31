@@ -17,6 +17,7 @@ class SVFGDataset(DGLDataset):
         self.graphs = []
         self.labels = []
         self.num_classes = 0
+        self.graph_id_mappings = []
 
         # Create a graph for each graph ID from the edges table.
         # First process the properties table into two dictionaries with graph IDs as keys.
@@ -39,10 +40,36 @@ class SVFGDataset(DGLDataset):
             num_nodes = num_nodes_dict[graph_id]
             label = label_dict[graph_id]
 
+            id_counter = 0
+            src_norm = []
+            dst_norm = []
+            id_mappings = {}
+            for src_val in src:
+
+                if src_val in id_mappings:
+                    val = id_mappings[src_val]
+                else:
+                    id_mappings[src_val] = id_counter
+                    val = id_counter
+                    id_counter = id_counter + 1
+
+                src_norm.append(val)
+
+            for dst_val in dst:
+                if dst_val in id_mappings:
+                    val = id_mappings[dst_val]
+                else:
+                    id_mappings[dst_val] = id_counter
+                    val = id_counter
+                    id_counter = id_counter + 1
+
+                dst_norm.append(val)
+
             # Create a graph and add it to the list of graphs and labels.
-            g = dgl.graph((src, dst), num_nodes=num_nodes)
+            g = dgl.graph((src_norm, dst_norm), num_nodes=num_nodes)
             self.graphs.append(g)
             self.labels.append(label)
+            self.graph_id_mappings.append(id_mappings)
 
         self.num_classes = max(self.labels) + 1
 

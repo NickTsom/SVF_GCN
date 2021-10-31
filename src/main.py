@@ -53,8 +53,13 @@ def main():
     model_output_dimensions = 256
     dropout = 0.2
 
-    train_dataset = MiniGCDataset(320, 10, 20)
-    test_dataset = MiniGCDataset(80, 10, 20)
+    train_dataset = MiniGCDataset(320, 10, 200)
+    test_dataset = MiniGCDataset(80, 10, 200)
+
+    #train_edges_file = 'data/svfg_edges.csv'
+    #train_properties_file = 'data/svfg_properties.csv'
+    #train_dataset = SVFGDataset(train_edges_file, train_properties_file)
+    #test_dataset = SVFGDataset()
 
     data_loader = DataLoader(train_dataset, batch_size=dataset_batch_size,
                              shuffle=True, collate_fn=collate)
@@ -69,7 +74,7 @@ def main():
     epoch_losses = train(model, data_loader, loss_func, optimiser, num_epochs)
 
     model.eval()
-    evaluate(test_dataset, model)
+    #valuate(test_dataset, model)
 
     # Plot losses
     plt.title('Cross Entropy Loss Over Minibatches')

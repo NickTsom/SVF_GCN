@@ -9,8 +9,6 @@ from torch.utils.data import DataLoader
 from classifier import Classifier
 from svfg_loader import SVFGDataset
 
-from dgl.data.utils import split_dataset
-
 
 def collate(samples):
     graphs, labels = map(list, zip(*samples))
@@ -23,7 +21,6 @@ def train(model, data_loader, loss_func, optimiser, num_epochs):
         epoch_loss = 0
         for iter, (bg, label) in enumerate(data_loader):
             prediction = model(bg)
-            #label = label[:, None]
             loss = loss_func(prediction, label)
             optimiser.zero_grad()
             loss.backward()
@@ -46,7 +43,6 @@ def evaluate(testset, model):
     accuracy_percent = correct_predictions / len(test_Y) * 100
 
     print('Accuracy of predictions on the test set: {:.2f}%'.format(accuracy_percent))
-
 
 def main():
     # Parameters
